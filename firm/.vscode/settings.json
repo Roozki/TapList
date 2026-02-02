@@ -5,7 +5,7 @@
   "idf.openOcdConfigs": [
     "board/esp32-wrover-kit-3.3v.cfg"
   ],
-  "idf.port": "detect",
+  "idf.port": "/dev/ttyUSB0",
   "idf.toolsPath": "/home/rowan/.espressif",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32"
@@ -24,5 +24,6 @@
   "python.analysis.extraPaths": [
     "/opt/ros/humble/lib/python3.10/site-packages",
     "/opt/ros/humble/local/lib/python3.10/dist-packages"
-  ]
+  ],
+  "idf.flashType": "UART"
 }
