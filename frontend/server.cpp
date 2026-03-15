@@ -2,7 +2,7 @@
 #include <string>
 #include <mutex>
 
-#include "../external_pkgs/cpp-httplib/httplib.h"
+#include "../external_pkgs/cpp-httplib/httplib.h" // Gross include 
 
 int main() {
 
@@ -64,5 +64,8 @@ int main() {
 
     std::cout << "Server running at http://localhost:8080\n";
 
+    // server.listen("127.0.0.1", 8080);
     server.listen("0.0.0.0", 8080);
+    std::cout << "Server Stopped. \n";
+
 }
