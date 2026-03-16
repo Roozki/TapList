@@ -50,8 +50,19 @@ void app_main(void)
     rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
 
 
-
-
+    // Infinite loop
+    for (;;)
+    {
+        int level = gpio_get_level(IRQ_READER_1);
+        if(level == 1)
+        {
+            printf("IRQ HIGH \n");
+        } else if (level == 0) 
+        {
+            printf("IRQ LOW \n");
+        }
+        vTaskDelay(100);
+    }
 }
 
 static const char *TAG = "rc522";
