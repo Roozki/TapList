@@ -1,0 +1,1 @@
+#define EXPECTED_VERSION 0x88 // Clone chip

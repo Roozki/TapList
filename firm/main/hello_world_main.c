@@ -1,13 +1,11 @@
-/*
- * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- */
+// Meow.
+// This is a birthday gift.
 
 #include <stdio.h>
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
 #include "rc522_register_map.h"
+#include "main_definitions.h"
 
 #define IRQ_READER_1 GPIO_NUM_35
 #define CHIPSELECT_READER_1 GPIO_NUM_26
@@ -15,6 +13,8 @@
 #define SCLK_PIN_READER_1 GPIO_NUM_18
 #define MOSI_PIN_READER_1 GPIO_NUM_23
 #define MISO_PIN_READER_1 GPIO_NUM_19
+
+// #define USER_LED_PIN GPIO_NUM_2 // LED D2 Not working
 
 typedef struct {
     spi_device_handle_t spi;
@@ -36,6 +36,9 @@ void configure_gpios(void)
         .intr_type = GPIO_INTR_DISABLE
     };
     gpio_config(&conf);
+
+    // conf.pin_bit_mask = (1ULL << USER_LED_PIN);
+    // gpio_config(&conf); //? Not working
 }
 
 rc522_t reader_1 = {
@@ -116,7 +119,15 @@ static esp_err_t rc522_read_reg(rc522_t *dev, uint8_t reg, uint8_t *out)
     return err;
 }
 
+static esp_err_t rc522_check_version(rc522_t *dev, uint8_t *version)
+{
+    return rc522_read_reg(dev, RC522_REG_VERSION, version);
+}
 
+static esp_err_t rc522_flush_fifo(rc522_t *dev)
+{
+    return rc522_write_reg(dev, RC522_REG_FIFO_LEVEL, 0b1000000);
+}
 
 void app_main(void)
 {
@@ -125,20 +136,18 @@ void app_main(void)
 
     rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
 
-    // rc522_write_reg(&reader_1, RC522_REG_COMMAND, RC522_CMD_RECEIVE);/
+    // Check version. This also helps to 
+    uint8_t version = 0xFF;
+    uint16_t err = rc522_read_reg(&reader_1, RC522_REG_VERSION, &version);
 
-    // rc522_write_reg(&reader_1, RC522_REG_COMMAND, RC522_CMD_RECEIVE);
-    // Infinite loop
-    for (;;)
-    {
-    uint8_t rx_buf[2] = {0,0};
-    uint16_t err = rc522_read_reg(&reader_1, RC522_REG_VERSION, rx_buf);
-
-    uint8_t version = rx_buf[0];
     if (err != ESP_OK) {
         printf("Version read failed: %s\n", esp_err_to_name(err));
         return;
     }
+
+    // Infinite loop
+    for (;;)
+    {
         int level = gpio_get_level(IRQ_READER_1);
         if(level == 1)
         {

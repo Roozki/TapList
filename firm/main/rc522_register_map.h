@@ -41,3 +41,7 @@
 // PICC commands
 #define PICC_CMD_REQA            0x26
 #define PICC_CMD_WUPA            0x52
+
+
+// Other bits
+#define RC522_MISC_CLEAR_FIFO   0b1000'0000 // Write this to RC522_REG_FIFO_LEVEL and it clears the buffer
