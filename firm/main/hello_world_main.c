@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
+#include "rc522_register_map.h"
 
 #define IRQ_READER_1 GPIO_NUM_35
 #define CHIPSELECT_READER_1 GPIO_NUM_26
@@ -41,29 +42,6 @@ rc522_t reader_1 = {
     .rst_gpio = RESET_PIN_READER_1,
 };
 
-
-void app_main(void)
-{
-    printf("Program start \n");
-    // configure_gpios();
-
-    rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
-
-
-    // Infinite loop
-    for (;;)
-    {
-        int level = gpio_get_level(IRQ_READER_1);
-        if(level == 1)
-        {
-            printf("IRQ HIGH \n");
-        } else if (level == 0) 
-        {
-            printf("IRQ LOW \n");
-        }
-        vTaskDelay(100);
-    }
-}
 
 static const char *TAG = "rc522";
 
@@ -139,3 +117,126 @@ static esp_err_t rc522_read_reg(rc522_t *dev, uint8_t reg, uint8_t *out)
 }
 
 
+
+void app_main(void)
+{
+    printf("Program start \n");
+    // configure_gpios();
+
+    rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
+
+    // rc522_write_reg(&reader_1, RC522_REG_COMMAND, RC522_CMD_RECEIVE);/
+
+    // rc522_write_reg(&reader_1, RC522_REG_COMMAND, RC522_CMD_RECEIVE);
+    // Infinite loop
+    for (;;)
+    {
+    uint8_t rx_buf[2] = {0,0};
+    uint16_t err = rc522_read_reg(&reader_1, RC522_REG_VERSION, rx_buf);
+
+    uint8_t version = rx_buf[0];
+    if (err != ESP_OK) {
+        printf("Version read failed: %s\n", esp_err_to_name(err));
+        return;
+    }
+        int level = gpio_get_level(IRQ_READER_1);
+        if(level == 1)
+        {
+            printf("IRQ HIGH \n");
+        } else if (level == 0) 
+        {
+            printf("IRQ LOW \n");
+        }
+
+        printf("%X \n", version);
+        
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+/*
+static esp_err_t rc522_request_a(rc522_t *dev, uint8_t *atqa, uint8_t *atqa_len)
+{
+    uint8_t irq = 0;
+    uint8_t err = 0;
+    uint8_t fifo_len = 0;
+
+    *atqa_len = 0;
+
+    // Stop any active command
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_COMMAND, RC522_CMD_IDLE));
+
+    // Clear IRQ flags
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_COM_IRQ, 0x7F));
+
+    // Flush FIFO
+    ESP_ERROR_CHECK(rc522_flush_fifo(dev));
+
+    // REQA is 7 bits
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_BIT_FRAMING, 0x07));
+
+    // Write request byte to FIFO
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_FIFO_DATA, PICC_CMD_REQA));
+
+    // Start transceive
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_COMMAND, RC522_CMD_TRANSCEIVE));
+
+    // StartSend bit = bit 7
+    ESP_ERROR_CHECK(rc522_set_bits(dev, RC522_REG_BIT_FRAMING, 0x80));
+
+    // Poll for RX / timeout / error completion
+    for (int i = 0; i < 50; ++i) {
+        ESP_ERROR_CHECK(rc522_read_reg_u8(dev, RC522_REG_COM_IRQ, &irq));
+
+        if (irq & 0x20) { // RxIRq
+            break;
+        }
+        if (irq & 0x01) { // TimerIRq
+            return ESP_ERR_TIMEOUT;
+        }
+        if (irq & 0x02) { // ErrIRq
+            break;
+        }
+
+        ets_delay_us(200);
+    }
+
+    ESP_ERROR_CHECK(rc522_read_reg_u8(dev, RC522_REG_ERROR, &err));
+    if (err != 0x00) {
+        printf("RC522 ErrorReg = 0x%02X\n", err);
+        return ESP_FAIL;
+    }
+
+    ESP_ERROR_CHECK(rc522_read_reg_u8(dev, RC522_REG_FIFO_LEVEL, &fifo_len));
+    if (fifo_len < 2) {
+        printf("Unexpected FIFO len: %u\n", fifo_len);
+        return ESP_FAIL;
+    }
+
+    if (fifo_len > 2) fifo_len = 2;
+
+    for (uint8_t i = 0; i < fifo_len; ++i) {
+        ESP_ERROR_CHECK(rc522_read_reg_u8(dev, RC522_REG_FIFO_DATA, &atqa[i]));
+    }
+
+    *atqa_len = fifo_len;
+
+    // Clear StartSend and return to byte framing default
+    ESP_ERROR_CHECK(rc522_clear_bits(dev, RC522_REG_BIT_FRAMING, 0x80));
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_BIT_FRAMING, 0x00));
+    ESP_ERROR_CHECK(rc522_write_reg_u8(dev, RC522_REG_COMMAND, RC522_CMD_IDLE));
+
+    return ESP_OK;
+}
+
+
+*/
