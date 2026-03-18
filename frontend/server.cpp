@@ -8,6 +8,7 @@
 int main() {
 
     httplib::Server server;
+    App app;
 
     int shared_value = 0;
     std::mutex value_mutex;

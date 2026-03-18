@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 #include <unordered_map>
+#include <fstream>
 
 
 enum class ItemStatus {
@@ -11,12 +12,14 @@ enum class ItemStatus {
 };
 
 struct Item {
-    // std::string name = "UNAMED_ITEM";
+    std::string name = "UNAMED_ITEM";
     uint32_t card_uid = 0;
     ItemStatus status = ItemStatus::unregistered;
 };
 
 struct User {
-    // std::string username = "UNREGISTERED_USER";
+    std::string name = "UNREGISTERED_USER";
     std::unordered_map<std::string, Item> item_map = {};
 };
+
+using user_map_t = std::unordered_map<std::string, User>;

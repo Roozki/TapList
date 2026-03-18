@@ -6,6 +6,7 @@ project(taplist_server)
 
 set(CMAKE_CXX_STANDARD 17) # cpp 2017 standard
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../submodules/Catch2 ${CMAKE_CURRENT_BINARY_DIR}/submodules/Catch2) # Include Catch2 for unit tests
 
@@ -33,6 +34,9 @@ file(GLOB SERVER_SOURCES CMAKE_CONFIGURE_DEPENDS
 add_executable(server
     ${CMAKE_CURRENT_LIST_DIR}/server.cpp ${SERVER_SOURCES})
 
+target_include_directories(server PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
 
 target_compile_options(server PRIVATE 
     -Wall
