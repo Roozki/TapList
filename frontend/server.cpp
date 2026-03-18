@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <mutex>
+#include "server.h"
 
 #include "../external_pkgs/cpp-httplib/httplib.h" // Gross include 
 

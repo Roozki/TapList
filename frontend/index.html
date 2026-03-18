@@ -5,11 +5,12 @@
     <title>Test Js Website</title>
 </head>
     <body>
-        <h1>Test Website</h1>
+        <h1>TapList</h1>
+        <p> the list that you tap! </p>
         
         <p>Current value: <span id="value">loading...</span></p>
         <button onclick="refreshValue()">Refresh</button>
-        
+        <img src="assets/ssdfg.jpeg" height="10%" width="10%"/>
         <script>
             async function refreshValue() {
                 const response = await fetch('/value');
@@ -24,6 +25,8 @@
                 
             }, 3000);
             
+
+
             
             </script>
 
