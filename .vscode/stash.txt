@@ -4,3 +4,7 @@
         // "/home/rowan/RoverFlake2/install/rover_msgs/include/**",
         // "/home/rowan/RoverFlake2/install/moteus_msgs/include/**",
         // "/opt/ros/humble/include/**",
+
+
+
+      // "intelliSenseMode": "gcc-x64",

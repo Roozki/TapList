@@ -55,5 +55,6 @@
         "/home/rowan/RoverFlake2/install/localization_dev/lib/python3.10/site-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
-    ]
+    ],
+    "C_Cpp.intelliSenseEngine": "default"
 }

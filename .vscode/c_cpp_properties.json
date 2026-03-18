@@ -11,8 +11,9 @@
         "/home/rowan/TapList/frontend/**"
       ],
       "name": "ros2",
-      "intelliSenseMode": "gcc-x64",
-      "compilerPath": "/usr/bin/gcc",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "intelliSenseMode": "linux-gcc-x64",
+      "compilerPath": "/usr/bin/clang++-14",
       "cStandard": "gnu11",
       "cppStandard": "c++17"
     }
