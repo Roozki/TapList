@@ -8,7 +8,9 @@
 enum class ItemStatus {
     unregistered, // Item not inited
     in_stock, // Item is in the kitchen
-    out_of_stock // Item is out of stock or will be soon
+    out_of_stock, // Item is out of stock or will be soon
+    unknown, // Error State
+    num_item_status
 };
 
 struct Item {
