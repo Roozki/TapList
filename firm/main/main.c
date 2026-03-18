@@ -178,7 +178,8 @@ static esp_err_t rc522_request_anticollision(rc522_t *dev)
 
     uint8_t rx_byte = 0;
     uint8_t fifo_level = 1; // We loaded one fifo byte.
-
+    // trigger send?
+    // err = rc522_write_reg(dev, RC522_REG_BIT_FRAMING, )
     // Read
     rc522_block_until_rx_cplt(dev);
     err = rc522_read_reg(dev, RC522_REG_FIFO_DATA, &rx_byte);
