@@ -126,8 +126,82 @@ static esp_err_t rc522_check_version(rc522_t *dev, uint8_t *version)
 
 static esp_err_t rc522_flush_fifo(rc522_t *dev)
 {
-    return rc522_write_reg(dev, RC522_REG_FIFO_LEVEL, 0b1000000);
+    return rc522_write_reg(dev, RC522_REG_FIFO_LEVEL, RC522_FLUSH_FIFO_VALUE);
 }
+
+static esp_err_t rc522_flush_command_reg(rc522_t *dev)
+{
+    return rc522_write_reg(dev, RC522_REG_COMMAND, RC522_CMD_IDLE);
+}
+
+static esp_err_t rc522_block_until_rx_cplt(rc522_t *dev)
+{
+    uint8_t irq_status = 0x00;
+        printf(". 0x%X", irq_status);
+
+    while(irq_status != RC522_IRQ_RXCPLT_MASK)
+    {
+        irq_status = 0;
+        rc522_read_reg(dev, RC522_REG_COM_IRQ, &irq_status);
+        printf(". 0x%X", irq_status);
+        irq_status &= RC522_IRQ_RXCPLT_MASK;
+        vTaskDelay(portTICK_PERIOD_MS / 50);
+    }
+    printf("\n ...rx complete \n");
+
+    return ESP_OK;
+}
+
+
+static esp_err_t rc522_request_anticollision(rc522_t *dev)
+{
+    esp_err_t err = ESP_OK;
+
+    // Flush (clear) command reg
+    err = rc522_flush_command_reg(dev);
+    if(err != ESP_OK)
+    {
+        return err;
+    } 
+        printf("command flushed \n");
+
+    // Flush FIFO
+    err = rc522_flush_fifo(dev);
+        printf(" fifo flushed \n");
+
+    // Load FIFO with card-specific command 
+    err = rc522_write_reg(dev, RC522_REG_FIFO_DATA, PICC_CMD_REQA);
+        printf(" fifo loaded  \n");
+
+    err = rc522_write_reg(dev, RC522_REG_COMMAND, RC522_CMD_TRANSCEIVE);
+        printf(" fifo transeive start  \n");
+
+    uint8_t rx_byte = 0;
+    uint8_t fifo_level = 1; // We loaded one fifo byte.
+
+    // Read
+    rc522_block_until_rx_cplt(dev);
+    err = rc522_read_reg(dev, RC522_REG_FIFO_DATA, &rx_byte);
+    err = rc522_read_reg(dev, RC522_REG_FIFO_LEVEL, &fifo_level);
+
+
+    if(fifo_level > 2)
+    {
+        printf("More than one byte received! %i \n", fifo_level);
+    } else 
+    {
+        printf("one byte recieved! 0x%X \n", rx_byte);
+    }
+
+    if(err != ESP_OK)
+    {
+        return err;
+    } 
+
+    return err;
+ 
+}
+
 
 void app_main(void)
 {
@@ -136,7 +210,7 @@ void app_main(void)
 
     rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
 
-    // Check version. This also helps to 
+    // Check version. This also helps to make sure communication is OK
     uint8_t version = 0xFF;
     uint16_t err = rc522_read_reg(&reader_1, RC522_REG_VERSION, &version);
 
@@ -144,6 +218,8 @@ void app_main(void)
         printf("Version read failed: %s\n", esp_err_to_name(err));
         return;
     }
+    
+    
 
     // Infinite loop
     for (;;)
@@ -157,7 +233,9 @@ void app_main(void)
             printf("IRQ LOW \n");
         }
 
-        printf("%X \n", version);
+        // printf("%X \n", version);
+
+        rc522_request_anticollision(&reader_1);
         
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
