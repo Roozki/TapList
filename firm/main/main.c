@@ -136,18 +136,41 @@ static esp_err_t rc522_flush_command_reg(rc522_t *dev)
 
 static esp_err_t rc522_block_until_rx_cplt(rc522_t *dev)
 {
+    uint32_t start_ticks = xTaskGetTickCount();
     uint8_t irq_status = 0x00;
         printf(". 0x%X", irq_status);
 
-    while(irq_status != RC522_IRQ_RXCPLT_MASK)
+    bool irq_triggered = false;
+    while(irq_triggered == false)
     {
         irq_status = 0;
         rc522_read_reg(dev, RC522_REG_COM_IRQ, &irq_status);
-        printf(". 0x%X", irq_status);
-        irq_status &= RC522_IRQ_RXCPLT_MASK;
+        if(irq_status & RC522_COMIRQ_RX_MASK)
+        {
+            printf("RX Complete success \n");
+            return ESP_OK;
+        }
+
+        if(irq_status & RC522_COMIRQ_ERR_MASK)
+        {
+            printf("RX Errored out \n");
+            return ESP_OK; //TODO error handling
+        }
+
+        if(irq_status & RC522_COMIRQ_TIMER_MASK)
+        {
+            printf("RX timed out \n");
+            return ESP_OK; //TODO error handling
+        }
+
         vTaskDelay(portTICK_PERIOD_MS / 50);
+
+        if(xTaskGetTickCount() - start_ticks > 100)
+        {
+            printf("receiver wait timemout\n");
+            break;
+        }
     }
-    printf("\n ...rx complete \n");
 
     return ESP_OK;
 }
@@ -169,30 +192,43 @@ static esp_err_t rc522_request_anticollision(rc522_t *dev)
     err = rc522_flush_fifo(dev);
         printf(" fifo flushed \n");
 
-    // Load FIFO with card-specific command 
+    // Load FIFO with card-specific command
+    rc522_write_reg(dev, RC522_REG_BIT_FRAMING, 0x07);
     err = rc522_write_reg(dev, RC522_REG_FIFO_DATA, PICC_CMD_REQA);
         printf(" fifo loaded  \n");
 
     err = rc522_write_reg(dev, RC522_REG_COMMAND, RC522_CMD_TRANSCEIVE);
-        printf(" fifo transeive start  \n");
+        printf(" fifo transeive setup  \n");
+    // err = rc522_write_reg(dev, RC522_REG_BIT_FRAMING, RC522_TX_TRIGGER_VALUE);
+    rc522_write_reg(dev, RC522_REG_BIT_FRAMING, 0x87); // 7 bits + StartSend
+        printf(" fifo transfer triggered  \n");
 
-    uint8_t rx_byte = 0;
+
+    uint8_t rx_byte_1 = 0;
+    uint8_t rx_byte_2 = 0;
     uint8_t fifo_level = 1; // We loaded one fifo byte.
     // trigger send?
     // err = rc522_write_reg(dev, RC522_REG_BIT_FRAMING, )
     // Read
     rc522_block_until_rx_cplt(dev);
-    err = rc522_read_reg(dev, RC522_REG_FIFO_DATA, &rx_byte);
+    rc522_write_reg(dev, RC522_REG_BIT_FRAMING, 0x00);
+
+    err = rc522_read_reg(dev, RC522_REG_FIFO_DATA, &rx_byte_1);
+    err = rc522_read_reg(dev, RC522_REG_FIFO_DATA, &rx_byte_2);
     err = rc522_read_reg(dev, RC522_REG_FIFO_LEVEL, &fifo_level);
 
 
-    if(fifo_level > 2)
+    if(fifo_level > 0)
     {
-        printf("More than one byte received! %i \n", fifo_level);
+        printf("More than two bytes received! %i \n", fifo_level);
     } else 
     {
-        printf("one byte recieved! 0x%X \n", rx_byte);
+        printf("two bytes recieved! 0x%X \n", rx_byte_1);
+        printf("two bytes recieved! 0x%X \n", rx_byte_2);
     }
+
+    rc522_write_reg(dev, RC522_REG_COMMAND, RC522_CMD_IDLE);
+rc522_write_reg(dev, RC522_REG_BIT_FRAMING, 0x00);
 
     if(err != ESP_OK)
     {
@@ -203,6 +239,30 @@ static esp_err_t rc522_request_anticollision(rc522_t *dev)
  
 }
 
+static esp_err_t rc522_turn_on_antenna(rc522_t *dev)
+{
+    uint8_t tx;
+    rc522_read_reg(dev, RC522_REG_TX_CONTROL, &tx);
+    if (!(tx & 0x03)) {
+        rc522_write_reg(dev, RC522_REG_TX_CONTROL, tx | 0x03);
+    }
+    return ESP_OK;
+}
+
+static esp_err_t rc522_turn_off_antenna(rc522_t *dev)
+{
+    uint8_t tx;
+    rc522_read_reg(dev, RC522_REG_TX_CONTROL, &tx);
+    // if (!(tx ^ 0x03)) {
+        rc522_write_reg(dev, RC522_REG_TX_CONTROL, tx & ~0x03);
+    // }
+    return ESP_OK;
+}
+
+static esp_err_t rc522_clear_irq_flags(rc522_t *dev)
+{
+    return rc522_write_reg(dev, RC522_REG_COM_IRQ, 0x7F);
+}
 
 void app_main(void)
 {
@@ -221,7 +281,6 @@ void app_main(void)
     }
     
     
-
     // Infinite loop
     for (;;)
     {
@@ -235,10 +294,13 @@ void app_main(void)
         }
 
         // printf("%X \n", version);
-
+    rc522_turn_on_antenna(&reader_1);
+        rc522_clear_irq_flags(&reader_1);
         rc522_request_anticollision(&reader_1);
+    rc522_turn_off_antenna(&reader_1);
+
         
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 

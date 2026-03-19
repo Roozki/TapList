@@ -45,6 +45,15 @@
 
 // Other bits
 #define RC522_MISC_CLEAR_FIFO   0b1000'0000 // Write this to RC522_REG_FIFO_LEVEL and it clears the buffer
-
+int b = 0b100000;
 // Masks
-#define RC522_IRQ_RXCPLT_MASK 0x20 // Bit 5
+// #define RC522_IRQ_RXCPLT_MASK 0x20 // Bit 5
+
+#define RC522_COMIRQ_SET1_MASK        (1u << 7)
+#define RC522_COMIRQ_TX_MASK          (1u << 6)
+#define RC522_COMIRQ_RX_MASK          (1u << 5)
+#define RC522_COMIRQ_IDLE_MASK        (1u << 4)
+#define RC522_COMIRQ_HIALERT_MASK     (1u << 3)
+#define RC522_COMIRQ_LOALERT_MASK     (1u << 2)
+#define RC522_COMIRQ_ERR_MASK         (1u << 1)
+#define RC522_COMIRQ_TIMER_MASK       (1u << 0)
