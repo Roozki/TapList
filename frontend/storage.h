@@ -10,7 +10,6 @@
 #define ITEM_OUT_OF_STOCK_KEY_STR "OUT_OF_STOCK"
 
 
-
 // #define END_OF_LINE ','
 
 // static inline constexpr char[10] file_ext = ".taplist";
@@ -94,6 +93,8 @@ private:
     
     
 };
+using storage_map_t = std::unordered_map<std::string, UserStorage>;
+
 
 StorageRet UserStorage::decode_item_status(const std::string item_status_str, ItemStatus& item_status)
 {

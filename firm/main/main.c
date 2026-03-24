@@ -5,6 +5,7 @@
 #include <driver/gpio.h>
 #include "main_definitions.h"
 #include "rc522_reader.h"
+#include "client.h"
 
 #define IRQ_READER_1 GPIO_NUM_35
 #define CHIPSELECT_READER_1 GPIO_NUM_26
@@ -40,7 +41,7 @@ rc522_t reader_1 = {
     .rst_gpio = RESET_PIN_READER_1,
 };
 
-
+#define SERVER_SEND_PERIOD_TICKS 100 
 
 void app_main(void)
 {
@@ -58,8 +59,10 @@ void app_main(void)
         printf("Version read failed: %s\n", esp_err_to_name(err));
         return;
     }
-    
-    
+        wifi_init_sta();
+        vTaskDelay(200);
+
+    uint32_t last_server_send_tick = 0;
     // Infinite loop
     for (;;)
     {
@@ -80,7 +83,14 @@ void app_main(void)
         rc522_turn_off_antenna(&reader_1);
 
         
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        if( xTaskGetTickCount() - last_server_send_tick > SERVER_SEND_PERIOD_TICKS)
+        {
+            last_server_send_tick = xTaskGetTickCount();
+            send_post_request();
+        }
+
+
+        vTaskDelay(3);
     }
 }
 

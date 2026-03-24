@@ -45,13 +45,13 @@ AppRet App::load_all_user_data()
     for (auto pair : user_map)
     {
         // Fill up storage map
-        UserStorage storage(pair.second);
-        storage_map.emplace(pair.first, storage);
+        // UserStorage storage(pair.second);
+        storage_map.try_emplace(pair.first, UserStorage(pair.second));
     }
 
     // for (auto pair : storage_map)
     // {
     //     pair.second
     // }
-
+    return AppRet::OK;
 }

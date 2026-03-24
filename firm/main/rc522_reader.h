@@ -145,9 +145,9 @@ static esp_err_t rc522_block_until_rx_cplt(rc522_t *dev)
             return ESP_ERR_TIMEOUT; //TODO error handling
         }
 
-        vTaskDelay(portTICK_PERIOD_MS * 10);
+        vTaskDelay(1);
 
-        if(xTaskGetTickCount() - start_ticks > 100)
+        if(xTaskGetTickCount() - start_ticks > 10)
         {
             printf("receiver wait timemout (controller) \n");
             return ESP_ERR_TIMEOUT; //TODO error handling
@@ -211,9 +211,7 @@ static esp_err_t rc522_reqa(rc522_t *dev)
         err = (rx_byte_1 == 0x4 && rx_byte_2 == 0x0) ? ESP_OK : ESP_FAIL;
     }
 
-
     return err;
- 
 }
 
 static esp_err_t rc522_energized_reset(rc522_t *dev)
@@ -235,27 +233,24 @@ static esp_err_t rc522_request_anticollision_cl1(rc522_t *dev)
         rc522_read_reg(dev, RC522_REG_FIFO_LEVEL, &bytes_received);
         printf("Anticollision Data Received. Size: %d", bytes_received);
 
-        uint8_t uuid_buf[4];
+        uint8_t nuid_buf[4];
         uint8_t xor_crc; // bcc? 
         uint8_t calculated_crc = 0;
         
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +1);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +2);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +3);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +4);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +5);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +6);
-        rc522_read_reg(dev, RC522_REG_FIFO_DATA, uuid_buf +7);
-        uint32_t uuid = uuid_buf[0] + (uuid_buf[1] << 8) + (uuid_buf[2] << 16) + (uuid_buf[3] << 24);
-        printf("uuid: %ld\n", uuid);
-        printf("uuid_0: %X \n", uuid_buf[0]);
-        printf("uuid_1: %X \n", uuid_buf[1]);
-        printf("uuid_2: %X\n", uuid_buf[2]);
-        printf("uuid_3: %X\n", uuid_buf[3]);
-        printf("uuid_4: %X\n", uuid_buf[4]);
+        rc522_read_reg(dev, RC522_REG_FIFO_DATA, nuid_buf);
+        rc522_read_reg(dev, RC522_REG_FIFO_DATA, nuid_buf +1);
+        rc522_read_reg(dev, RC522_REG_FIFO_DATA, nuid_buf +2);
+        rc522_read_reg(dev, RC522_REG_FIFO_DATA, nuid_buf +3);
+        rc522_read_reg(dev, RC522_REG_FIFO_DATA, &xor_crc);
+        uint32_t nuid = nuid_buf[0] + (nuid_buf[1] << 8) + (nuid_buf[2] << 16) + (nuid_buf[3] << 24);
+        printf("uuid: %ld\n", nuid);
+        printf("uuid_0: %X \n", nuid_buf[0]);
+        printf("uuid_1: %X \n", nuid_buf[1]);
+        printf("uuid_2: %X\n", nuid_buf[2]);
+        printf("uuid_3: %X\n", nuid_buf[3]);
+
         printf("bcc (crc i think?): %X\n", xor_crc);
-        calculated_crc = uuid_buf[0] ^ uuid_buf[1] ^ uuid_buf[2] ^ uuid_buf[3];
+        calculated_crc = nuid_buf[0] ^ nuid_buf[1] ^ nuid_buf[2] ^ nuid_buf[3];
         printf("calculated bcc (crc i think?): %X\n", calculated_crc);
 
         if(calculated_crc != xor_crc)
@@ -267,10 +262,17 @@ static esp_err_t rc522_request_anticollision_cl1(rc522_t *dev)
 
         for(int i = 0; i < MAX_CARDS; i++)
         {
+            if(known_cards[i] == nuid)
+            {
+                printf("Known Card Found! nuid: %lu", nuid);
+                vTaskDelay(10);
+                return ESP_OK;
+            }
             if(known_cards[i] == 0)
             {
                 // Free slot found in card buffer
-                known_cards[i] = uuid;
+                printf("New Card Found! Registering.. nuid: %lu", nuid);
+                known_cards[i] = nuid;
                 num_known_cards++;
                 return ESP_OK; // Break and return OK
             }

@@ -25,4 +25,3 @@ struct User {
 };
 
 using user_map_t = std::unordered_map<std::string, User>;
-using storage_map_t = std::unordered_map<std::string, UserStorage>;
