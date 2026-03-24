@@ -42,6 +42,12 @@
 #define PICC_CMD_REQA            0x26
 #define PICC_CMD_WUPA            0x52
 
+#define PICC_CMD_CL1 0x93
+#define PICC_CMD_CL2 0x95
+#define PICC_CMD_ANTICOLLISION 0x20
+#define PICC_CMD_SELECT 0x70
+
+// Ex Anticollision CL1: Send 0x93, then 0x20
 
 // Other bits
 #define RC522_MISC_CLEAR_FIFO   0b1000'0000 // Write this to RC522_REG_FIFO_LEVEL and it clears the buffer
