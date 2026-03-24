@@ -23,23 +23,17 @@ enum class StorageRet {
     NOT_OK
 };
 
+enum class FileStatus {
+    OPEN,
+    CLOSED,
+    ERROR
+};
+
 class UserStorage {
 public:
     UserStorage(User& user) : user(user) {
 
         filename = user.name + FILE_EXT;
-
-        // See if file exhists yet
-        file.open(filename, std::ios::out | std::ios::in);
-        if(file.is_open())
-        {
-            printf("file exhists for %s \n", user.name.c_str());
-        } else 
-        {
-            printf("File not found for %s. Creating one now... \n", user.name.c_str());
-            file.open(filename, std::ios::out | std::ios::in | std::ios::trunc);
-            file << "FILE_START \n";
-        }
 
         // Read from file
 
@@ -85,13 +79,16 @@ public:
 
 
     // Read and load user list, to store in user reference
-    StorageRet load_user_list(); 
-    static StorageRet decode_item_status(const std::string item_status_str, ItemStatus& item_status);
-
+    StorageRet load_items(); 
+    StorageRet open_user_file();
+    StorageRet close_user_file();
+    
 private:
+    FileStatus file_status = FileStatus::CLOSED;
     std::string filename = "";
     std::fstream file;
     User& user;
+    static StorageRet decode_item_status(const std::string item_status_str, ItemStatus& item_status);
 
 
     
@@ -118,10 +115,33 @@ StorageRet UserStorage::decode_item_status(const std::string item_status_str, It
     return StorageRet::NOT_OK;
 }
 
-StorageRet UserStorage::load_user_list()
+// Finds and opens user file
+StorageRet UserStorage::open_user_file()
+{
+    if(file_status == FileStatus::OPEN)
+    {
+        // Log(Error, "User file attemped to open while already open.")
+        return StorageRet::NOT_OK;
+    }
+
+    //TODO store if file should or should not exhist within user.
+    // See if file exhists yet
+    file.open(filename, std::ios::out | std::ios::in);
+    if(file.is_open())
+    {
+        printf("file exhists for %s \n", user.name.c_str());
+    } else 
+    {
+        printf("File not found for %s. Creating one now... \n", user.name.c_str());
+        file.open(filename, std::ios::out | std::ios::in | std::ios::trunc);
+        file << "FILE_START \n";
+    }
+    return StorageRet::OK;
+}
+
+StorageRet UserStorage::load_items()
 {
     //TODO CRC
-    
 
     return StorageRet::OK;
 }
