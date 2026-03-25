@@ -44,6 +44,7 @@ void configure_gpios(void)
     // gpio_config(&conf); //? Not working
 }
 
+
 rc522_t reader_1 = {
     .rst_gpio = RESET_PIN_READER_1,
 };
@@ -81,7 +82,10 @@ void app_main(void)
         if(rc522_reqa(&reader_1) == ESP_OK)
         {
             printf("Correct type of card identified. Moving forward. \n");
-            rc522_request_anticollision_cl1(&reader_1);
+            if (rc522_request_anticollision_cl1(&reader_1) == ESP_OK)
+            {
+
+            }
 
         } else {
             printf("Incorrect type of card identified. Aborting read. \n");

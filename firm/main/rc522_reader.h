@@ -3,19 +3,25 @@
 #include <driver/gpio.h>
 #include "rc522_register_map.h"
 
-
-
 #define MAX_CARDS 32
 uint32_t known_cards[MAX_CARDS];
 uint32_t num_known_cards = 0;
 
+typedef enum {
+    RESET, // Reset registers and stuff
+    IDLE,
+    ERROR,
+    POWER_UP, // Turn on antenna
+    POWER_DOWN,
+    CHECK_CARD_TYPE,
+    CHECK_CARD_NUID,
+} ReaderState;
 
 typedef struct {
     spi_device_handle_t spi;
     gpio_num_t rst_gpio;
+    ReaderState state;
 } rc522_t;
-
-
 
 static esp_err_t rc522_spi_init(rc522_t *dev,
                                spi_host_device_t host,
