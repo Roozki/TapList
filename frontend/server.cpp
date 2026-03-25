@@ -24,7 +24,7 @@ int main() {
         std::string json =
             "{\"value\": " + std::to_string(shared_value) + "}";
 
-        res.set_content(json, "application/json");
+        res.set_content(json, "application/octet-stream");
     });
 
     // API endpoint updating value
@@ -35,7 +35,7 @@ int main() {
         //     res.set_content("Missing parameter x\n", "text/plain");
         //     return;
         // }
-    int new_value = std::stoi(req.body);
+    int new_value = req.body;
 
         {
             std::lock_guard<std::mutex> lock(value_mutex);
@@ -45,23 +45,24 @@ int main() {
     std::cout << "req.body = [" << req.body << "]\n";
     std::cout << "body size = [" << sizeof(req.body) << "]\n";
 
-        try {
+        // try {
 
-            int new_value = std::stoi(req.get_param_value("x"));
+        //     // int new_value = std::stoi(req.get_param_value("x")); // JSON or whatever
+        //     int new_value = req.get_param_value("x"); // raw binary
 
-            {
-                std::lock_guard<std::mutex> lock(value_mutex);
-                shared_value = new_value;
-            }
+        //     {
+        //         std::lock_guard<std::mutex> lock(value_mutex);
+        //         shared_value = new_value;
+        //     }
 
-            res.set_content("Value updated\n", "text/plain");
+        //     res.set_content("Value updated\n", "text/plain");
 
-        } catch (...) {
+        // } catch (...) {
 
-            res.status = 400;
-            res.set_content("Invalid integer\n", "text/plain");
+        //     res.status = 400;
+        //     res.set_content("Invalid integer\n", "text/plain");
 
-        }
+        // }
     });
 
     std::cout << "Server running at http://localhost:8080\n";

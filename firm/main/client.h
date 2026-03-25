@@ -12,6 +12,7 @@
 
 static const char *TAG = "wifi";
 
+// This file must be created
 #include "wifi_credentials.h"
 
 // event group to signal connection
@@ -38,7 +39,7 @@ static void wifi_event_handler(void *arg,
 
 void wifi_init_sta(void)
 {
-    wifi_event_gPonyJump2023roup = xEventGroupCreate();
+    wifi_event_group = xEventGroupCreate();
 
     // required for Wi-Fi
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -90,12 +91,12 @@ void send_post_request(void)
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
     static uint8_t num_sends = 0;
-    char *post_data;
-    sprintf(post_data, "%d", num_sends);
+    // char post_data;
+    // sprintf(&post_data, "%d", num_sends);
     num_sends++;
 
-    esp_http_client_set_header(client, "Content-Type", "application/x-www-form-urlencoded");
-    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_header(client, "Content-Type", "application/octet-stream");
+    esp_http_client_set_post_field(client, &(char){num_sends}, sizeof(num_sends));
 
     esp_err_t err = esp_http_client_perform(client);
 
