@@ -46,7 +46,7 @@ int main() {
         }
     std::cout << "POST /update hit\n";
     std::cout << "req.body = [" << req.body << "]\n";
-    std::cout << "body size = [" << sizeof(req.body) << "]\n";
+    std::cout << "body size = [" << req.body.length() << "]\n";
 
         // try {
 
