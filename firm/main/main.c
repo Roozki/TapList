@@ -71,6 +71,7 @@ void app_main(void)
         vTaskDelay(200);
 
     uint32_t last_server_send_tick = 0;
+    context.last_known_card_uuid = 0;
     // Infinite loop
     for (;;)
     {
@@ -95,8 +96,10 @@ void app_main(void)
         {
             last_server_send_tick = xTaskGetTickCount();
 
-            
-            send_raw_post_request(&(char){context.last_known_card_uuid}, sizeof(context.last_known_card_uuid));
+            char raw_bytes[4] = {'X', 'x', 'X', 'x'};
+            memcpy(raw_bytes, &context.last_known_card_uuid, sizeof(context.last_known_card_uuid));
+            send_raw_post_request(raw_bytes, sizeof(raw_bytes));
+            printf("Sending to server: %s \n", raw_bytes);
 
         }
 
