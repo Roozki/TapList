@@ -37,7 +37,7 @@ int main() {
         // }
 
         int new_value = 0;
-        memcpy(&new_value, &req.body, sizeof(new_value));
+        memcpy(&new_value, &req.body[0], sizeof(new_value));
 
 
         {
