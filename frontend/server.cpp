@@ -35,7 +35,10 @@ int main() {
         //     res.set_content("Missing parameter x\n", "text/plain");
         //     return;
         // }
-    int new_value = req.body;
+
+        int new_value = 0;
+        memcpy(&new_value, &req.body, sizeof(new_value));
+
 
         {
             std::lock_guard<std::mutex> lock(value_mutex);
