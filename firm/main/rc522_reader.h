@@ -265,8 +265,7 @@ static esp_err_t rc522_request_anticollision_cl1(rc522_t *dev)
             if(known_cards[i] == nuid)
             {
                 printf("Known Card Found! nuid: %lu", nuid);
-                vTaskDelay(10);
-                return ESP_OK;
+                // vTaskDelay(10);
             }
             if(known_cards[i] == 0)
             {
@@ -274,8 +273,9 @@ static esp_err_t rc522_request_anticollision_cl1(rc522_t *dev)
                 printf("New Card Found! Registering.. nuid: %lu", nuid);
                 known_cards[i] = nuid;
                 num_known_cards++;
-                return ESP_OK; // Break and return OK
             }
+            context.last_known_card_uuid = nuid;
+            return ESP_OK; // Break and return OK
         }
         printf("Internal Card Memory Full. Where is that server?!?! OR there may be a firmware issue");
                 return ESP_OK; // Break and return OK

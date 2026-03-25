@@ -81,7 +81,7 @@ void wifi_init_sta(void)
                         portMAX_DELAY);
 }
 
-void send_post_request(void)
+void send_raw_post_request(char* data, size_t len)
 {
     esp_http_client_config_t config = {
         .url = "https://taplist.share.zrok.io/update",
@@ -90,13 +90,9 @@ void send_post_request(void)
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    static uint8_t num_sends = 0;
-    // char post_data;
-    // sprintf(&post_data, "%d", num_sends);
-    num_sends++;
 
     esp_http_client_set_header(client, "Content-Type", "application/octet-stream");
-    esp_http_client_set_post_field(client, &(char){num_sends}, sizeof(num_sends));
+    esp_http_client_set_post_field(client, data, len);
 
     esp_err_t err = esp_http_client_perform(client);
 

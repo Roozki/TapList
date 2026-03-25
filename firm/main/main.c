@@ -1,7 +1,14 @@
 // Meow.
 // This is a birthday gift.
-
 #include <stdio.h>
+
+typedef struct AppContext {
+    uint32_t last_known_card_uuid;
+} AppContext_t;
+
+AppContext_t context = {};
+
+
 #include <driver/gpio.h>
 #include "main_definitions.h"
 #include "rc522_reader.h"
@@ -43,9 +50,10 @@ rc522_t reader_1 = {
 
 #define SERVER_SEND_PERIOD_TICKS 100 
 
+
+
 void app_main(void)
 {
- 
     printf("Program start \n");
     // configure_gpios();
 
@@ -86,7 +94,10 @@ void app_main(void)
         if( xTaskGetTickCount() - last_server_send_tick > SERVER_SEND_PERIOD_TICKS)
         {
             last_server_send_tick = xTaskGetTickCount();
-            send_post_request();
+
+            
+            send_raw_post_request(&(char){context.last_known_card_uuid}, sizeof(context.last_known_card_uuid));
+
         }
 
 
