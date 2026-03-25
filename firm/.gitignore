@@ -1,3 +1,6 @@
+# Wifi creds
+main/wifi_credentials.h
+
 # macOS
 .DS_Store
 .AppleDouble
