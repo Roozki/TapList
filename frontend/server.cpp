@@ -24,7 +24,7 @@ int main() {
         std::string json =
             "{\"value\": " + std::to_string(shared_value) + "}";
 
-        res.set_content(json, "application/octet-stream");
+        res.set_content(json, "application/json");
     });
 
     // API endpoint updating value
