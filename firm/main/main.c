@@ -13,6 +13,7 @@ AppContext_t context = {};
 #include "main_definitions.h"
 #include "rc522_reader.h"
 #include "client.h"
+#include "transcoder.h"
 
 #define IRQ_READER_1 GPIO_NUM_35
 #define CHIPSELECT_READER_1 GPIO_NUM_26
@@ -43,7 +44,6 @@ void configure_gpios(void)
     // conf.pin_bit_mask = (1ULL << USER_LED_PIN);
     // gpio_config(&conf); //? Not working
 }
-
 
 rc522_t reader_1 = {
     .rst_gpio = RESET_PIN_READER_1,
@@ -77,35 +77,42 @@ void app_main(void)
     for (;;)
     {
 
-        rc522_turn_on_antenna(&reader_1);
-        rc522_clear_irq_flags(&reader_1);
-        if(rc522_reqa(&reader_1) == ESP_OK)
-        {
-            printf("Correct type of card identified. Moving forward. \n");
-            if (rc522_request_anticollision_cl1(&reader_1) == ESP_OK)
-            {
+        // rc522_turn_on_antenna(&reader_1);
+        // rc522_clear_irq_flags(&reader_1);
+        // if(rc522_reqa(&reader_1) == ESP_OK)
+        // {
+        //     printf("Correct type of card identified. Moving forward. \n");
+        //     if (rc522_request_anticollision_cl1(&reader_1) == ESP_OK)
+        //     {
 
-            }
+        //     }
 
-        } else {
-            printf("Incorrect type of card identified. Aborting read. \n");
-        }
-        printf("Num known cards: %lu \n", num_known_cards);
+        // } else {
+        //     printf("Incorrect type of card identified. Aborting read. \n");
+        // }
+        // printf("Num known cards: %lu \n", num_known_cards);
 
 
-        rc522_turn_off_antenna(&reader_1);
+        // rc522_turn_off_antenna(&reader_1);
 
         
-        if( xTaskGetTickCount() - last_server_send_tick > SERVER_SEND_PERIOD_TICKS)
-        {
-            last_server_send_tick = xTaskGetTickCount();
+        // if( xTaskGetTickCount() - last_server_send_tick > SERVER_SEND_PERIOD_TICKS)
+        // {
+        //     last_server_send_tick = xTaskGetTickCount();
 
-            char raw_bytes[4] = {'X', 'x', 'X', 'x'};
-            memcpy(raw_bytes, &context.last_known_card_uuid, sizeof(context.last_known_card_uuid));
-            send_raw_post_request(raw_bytes, sizeof(raw_bytes));
-            printf("Sending to server: %s \n", raw_bytes);
+        //     char raw_bytes[4] = {'X', 'x', 'X', 'x'};
+        //     memcpy(raw_bytes, &context.last_known_card_uuid, sizeof(context.last_known_card_uuid));
+        //     send_raw_post_request(raw_bytes, sizeof(raw_bytes));
+        //     printf("Sending to server: %s \n", raw_bytes);
 
-        }
+        // }
+
+        char args[MAX_ARGS];
+        char *buffer[MAX_POST_REQUEST_BODY_SIZE];
+        uint32_t device_id = 0xFF;
+        MsgId msgid = PING;
+        encode(device_id, msgid, args, buffer);
+        vTaskDelay(100);
 
 
         vTaskDelay(3);
