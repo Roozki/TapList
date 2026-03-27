@@ -16,20 +16,22 @@
 
 #define MSG_CARD_TAPPED_LENGTH_BYTES 4u // 4 byte uuid? 
 
+// Macro that works with variable names data, and pos
+#define CONCAT(x) \
+            (memcpy((data) + (pos), &(x), sizeof(x)), pos += sizeof(x))
 
-// #define ENCODE(x)
+#define EXTRACT(x) \
+            (memcpy(&(x), (data) + (pos), sizeof(x)), pos += sizeof(x))
 
 typedef enum {
     MSGID_PING, // Debug / test purposes.
     MSGID_CARD_TAP_EVENT,
 } MsgId; // Message Id
 
-
 typedef enum {
     OK,
     NOT_OK,
 } TranscoderRet;
-
 
 typedef struct {
     uint32_t nuid;
@@ -128,13 +130,13 @@ static TranscoderRet encode(Msg* msg, char* data)
     uint32_t len = pos;
 
     #ifdef DEBUG
-    printEncodedData((const char*)data, len);
+        printEncodedData((const char*)data, len);
     #endif
 
     return OK;
 }
 
-static TranscoderRet decode(Msg* msg, const char* data, size_t len)
+static TranscoderRet decode(Msg* msg, const char* data)
 {
     uint32_t pos = 0;
 
@@ -149,7 +151,20 @@ static TranscoderRet decode(Msg* msg, const char* data, size_t len)
     memcpy(&msg->id, data + pos, sizeof(msg->id));
     pos += sizeof(msg->id);
 
+    // Now, branch off into specific parsing.
+    switch (msg->id)
+    {
+    case MSGID_PING:
+        memcpy(&msg->payload.ping.reserved, data + pos, sizeof(msg->payload.ping.reserved));
+        pos += sizeof(msg->payload.ping.reserved);
+        break;
+    case MSGID_CARD_TAP_EVENT:
+        EXTRACT(msg->payload.card_tap.nuid);
+        EXTRACT(msg->payload.card_tap.tap);
     
+    default:
+        break;
+    }
 
     // memcpy(data + pos, &opener, sizeof(opener));
     // pos += sizeof(opener);
@@ -168,14 +183,9 @@ static TranscoderRet decode(Msg* msg, const char* data, size_t len)
     // default:
     //     break;
     // }
-    len = pos;
-    if(len > 44)
-    {
-        return  NOT_OK;
-    }
 
     #ifdef DEBUG
-    
+        printDecodedData(msg);
     #endif
 
     return OK;
