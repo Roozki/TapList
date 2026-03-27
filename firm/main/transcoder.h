@@ -48,21 +48,21 @@ End:
 
 */
 #ifdef DEBUG
-static void printData(const char *data[MAX_POST_REQUEST_BODY_SIZE], size_t len)
+static void printData(const char *data, size_t len)
 {
         printf("Data Encoded: [");
     for (size_t i = 0; i < len; i++) {
-        printf("%02X ", *data[i]);
+        printf("%02X ", data[i]);
     }
     printf("]\n");
 }
 #endif
 
-static TranscoderRet encode(uint32_t DeviceId, MsgId msgId, const char args[MAX_ARGS], char* data[MAX_POST_REQUEST_BODY_SIZE])
+static TranscoderRet encode(uint32_t DeviceId, MsgId msgId, const char* args, char* data)
 {
     uint32_t startpos = (uint32_t)data;
 
-    uint32_t pos = startpos;
+    uint32_t pos = 0;
     uint8_t opener;
 
     if(DeviceId == SERVER_DEVICE_ID)
@@ -90,13 +90,58 @@ static TranscoderRet encode(uint32_t DeviceId, MsgId msgId, const char args[MAX_
     default:
         break;
     }
+    uint32_t len = pos;
 
     #ifdef DEBUG
-    printData((const char**)data, pos - startpos);
+    printData((const char*)data, len);
     #endif
 
     return OK;
 }
+
+static TranscoderRet decode(uint32_t DeviceId, MsgId msgId, const char* args, char* data)
+{
+    uint32_t startpos = (uint32_t)data;
+
+    uint32_t pos = 0;
+    uint8_t opener;
+
+    if(DeviceId == SERVER_DEVICE_ID)
+    {
+        opener = OPENER_MSG_FROM_SERVER;
+    } else
+    {
+        opener = OPENER_MSG_FROM_CLIENT;
+    }
+
+    memcpy(data + pos, &opener, sizeof(opener));
+    pos += sizeof(opener);
+
+    memcpy(data + pos, &DeviceId, sizeof(DeviceId));
+    pos += sizeof(DeviceId);
+
+
+
+    switch (msgId)
+    {
+    case PING:
+            
+        break;
+    
+    default:
+        break;
+    }
+    uint32_t len = pos;
+
+    #ifdef DEBUG
+    printData((const char*)data, len);
+    #endif
+
+    return OK;
+}
+
+
+
 
 
 

@@ -44,7 +44,7 @@ void configure_gpios(void)
     // conf.pin_bit_mask = (1ULL << USER_LED_PIN);
     // gpio_config(&conf); //? Not working
 }
-
+ 
 rc522_t reader_1 = {
     .rst_gpio = RESET_PIN_READER_1,
 };
@@ -60,7 +60,7 @@ void app_main(void)
 
     rc522_spi_init(&reader_1, SPI2_HOST, SCLK_PIN_READER_1, MOSI_PIN_READER_1, MISO_PIN_READER_1, CHIPSELECT_READER_1, RESET_PIN_READER_1);
 
-    // Check version. This also helps to make sure communication is OK
+    // Check version. This also helps to make sure SPI communication is OK
     uint8_t version = 0xFF;
     uint16_t err = rc522_read_reg(&reader_1, RC522_REG_VERSION, &version);
 
@@ -108,8 +108,8 @@ void app_main(void)
         // }
 
         char args[MAX_ARGS];
-        char *buffer[MAX_POST_REQUEST_BODY_SIZE];
-        uint32_t device_id = 0xFF;
+        char buffer[MAX_POST_REQUEST_BODY_SIZE];
+        uint32_t device_id = 0xDD0000AA;
         MsgId msgid = PING;
         encode(device_id, msgid, args, buffer);
         vTaskDelay(100);
