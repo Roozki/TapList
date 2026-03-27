@@ -25,8 +25,8 @@ public:
     // AppRet updateItemStatus(user& user, )
 
 
-private:
     User admin_user;
+private:
     user_map_t user_map = {};
     storage_map_t storage_map = {};
 

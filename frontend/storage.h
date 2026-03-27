@@ -33,9 +33,8 @@ public:
     UserStorage(User& user) : user(user) {
 
         filename = user.name + FILE_EXT;
-
         // Read from file
-
+        open_user_file();
         // Stored as csv
         std::string line;
         int num_invalid_entries = 0;
@@ -81,6 +80,10 @@ public:
     StorageRet load_items(); 
     StorageRet open_user_file();
     StorageRet close_user_file();
+
+    std::vector<std::string> items_in_stock;
+    std::vector<std::string> items_in_need;
+    
     
 private:
     FileStatus file_status = FileStatus::CLOSED;
@@ -143,6 +146,5 @@ StorageRet UserStorage::open_user_file()
 StorageRet UserStorage::load_items()
 {
     //TODO CRC
-
     return StorageRet::OK;
 }

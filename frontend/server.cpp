@@ -2,6 +2,7 @@
 #include <string>
 #include <mutex>
 #include "server.h"
+#include "transcoder.h"
 
 #include "../external_pkgs/cpp-httplib/httplib.h" // Gross include 
 
@@ -16,14 +17,43 @@ int main() {
     // Serve files from current directory
     server.set_mount_point("/", ".");
 
+    // server.Get("/value", [&](const httplib::Request&, httplib::Response& res) {
+        
+    //     std::lock_guard<std::mutex> lock(value_mutex);
+    
+    //     std::string json =
+    //         "{\"value\": " + std::to_string(shared_value) + "}";
+    
+    //     res.set_content(json, "application/json");
+    // });
+    Item test_item;
+    test_item.card_uid = 99;
+    test_item.name = "MeowMeow";
+    test_item.status = ItemStatus::unknown;
+    app.admin_user.item_map.emplace("MeowMeow", test_item);
+
     // API endpoint returning JSON
-    server.Get("/value", [&](const httplib::Request&, httplib::Response& res) {
+    server.Get("/items", [&](const httplib::Request&, httplib::Response& res) {
+
+        // std::vector<std::string>
 
         std::lock_guard<std::mutex> lock(value_mutex);
 
-        std::string json =
-            "{\"value\": " + std::to_string(shared_value) + "}";
+        std::string have_json, need_json;
 
+        for (const auto& [key, item] : app.admin_user.item_map) {
+            if (item.status == ItemStatus::in_stock) {
+                if (!have_json.empty()) have_json += ",";
+                have_json += "\"" + item.name + "\"";
+            } else if (item.status == ItemStatus::out_of_stock) {
+                if (!need_json.empty()) need_json += ",";
+                need_json += "\"" + item.name + "\"";
+            }
+        }
+
+std::string json = "{\"have\":[" + have_json + "],\"need\":[" + need_json + "]}";
+
+        res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(json, "application/json");
     });
 

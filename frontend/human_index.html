@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test Js Website</title>
+</head>
+    <body>
+        <h1>TapList</h1>
+        <p> the list that you tap! </p>
+        
+        <p>Current value: <span id="value">loading...</span></p>
+        <button onclick="refreshValue()">Refresh</button>
+        <img src="assets/ssdfg.jpeg" height="10%" width="10%"/>
+        <script>
+            async function refreshValue() {
+                const response = await fetch('/value');
+                const data = await response.json();
+                document.getElementById('value').textContent = data.value;
+            }
+            
+            refreshValue();
+            
+            setInterval(() => {
+                refreshValue();
+                
+            }, 1000);
+            
+
+
+            
+            </script>
+
+
+</body>
+
+</html>

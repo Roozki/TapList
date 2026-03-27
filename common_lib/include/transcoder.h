@@ -1,3 +1,11 @@
+// #ifdef ESP_PLATFORM
+//   #include "esp_log.h"
+//   #define LOG(tag, msg)  ESP_LOGI(tag, msg)
+// #else
+// #define LOG(tag, msg)  printf("[%s] %s\n", tag, msg)
+// #endif
+
+#include <stdio.h>
 // C combatible transcoder for server and client side
 
 #include <stdint.h>
