@@ -16,10 +16,12 @@
 
 #define MSG_CARD_TAPPED_LENGTH_BYTES 4u // 4 byte uuid? 
 
+
+// #define ENCODE(x)
+
 typedef enum {
-    PING, // Debug / test purposes.
-    CARD_TAPPED_ON_ADD_PAD,
-    CARD_TAPPED_ON_REMOVE_PAD,
+    MSGID_PING, // Debug / test purposes.
+    MSGID_CARD_TAP_EVENT,
 } MsgId; // Message Id
 
 
@@ -28,6 +30,26 @@ typedef enum {
     NOT_OK,
 } TranscoderRet;
 
+
+typedef struct {
+    uint32_t nuid;
+    uint8_t tap; // Info for tapping card. LSB is reserved for if it was tapped on add pad or remove pad
+} CardTapPayload;
+
+typedef struct {
+    uint32_t reserved; // Idk
+}  PingPayload;
+
+typedef union {
+    PingPayload ping;
+    CardTapPayload card_tap;
+} Payload;
+
+typedef struct {
+    uint32_t device_id;
+    MsgId id;
+    Payload payload;
+} Msg;
 
 // typedef encoder_buffer = char data[MAX_POST_REQUEST_BODY_SIZE];
 
@@ -48,7 +70,7 @@ End:
 
 */
 #ifdef DEBUG
-static void printData(const char *data, size_t len)
+static void printEncodedData(const char *data, size_t len)
 {
         printf("Data Encoded: [");
     for (size_t i = 0; i < len; i++) {
@@ -56,16 +78,24 @@ static void printData(const char *data, size_t len)
     }
     printf("]\n");
 }
+
+// Print a message
+static void printDecodedData(Msg* msg)
+{
+    printf("Data Decoded:  \n   \
+            Device ID: %04X  \n  \
+            Message ID: %04X  \n  \
+            ", (size_t)msg->device_id, msg->id);
+
+}
 #endif
 
-static TranscoderRet encode(uint32_t DeviceId, MsgId msgId, const char* args, char* data)
+static TranscoderRet encode(Msg* msg, char* data)
 {
-    uint32_t startpos = (uint32_t)data;
-
     uint32_t pos = 0;
     uint8_t opener;
 
-    if(DeviceId == SERVER_DEVICE_ID)
+    if(msg->device_id == SERVER_DEVICE_ID)
     {
         opener = OPENER_MSG_FROM_SERVER;
     } else
@@ -76,65 +106,76 @@ static TranscoderRet encode(uint32_t DeviceId, MsgId msgId, const char* args, ch
     memcpy(data + pos, &opener, sizeof(opener));
     pos += sizeof(opener);
 
-    memcpy(data + pos, &DeviceId, sizeof(DeviceId));
-    pos += sizeof(DeviceId);
+    memcpy(data + pos, &msg->device_id, sizeof(msg->device_id));
+    pos += sizeof(msg->device_id);
 
-
-
-    switch (msgId)
+    switch (msg->id)
     {
-    case PING:
-            
+    case MSGID_PING:
+        memcpy(data + pos, &msg->payload.ping, sizeof(msg->payload.ping.reserved));
+        pos += sizeof(msg->payload.ping.reserved);
         break;
-    
+    case MSGID_CARD_TAP_EVENT:
+        memcpy(data + pos, &msg->payload.ping, sizeof(msg->payload.card_tap.nuid));
+        pos += sizeof(msg->payload.card_tap.nuid);
+
+        memcpy(data + pos, &msg->payload.card_tap.tap, sizeof(msg->payload.card_tap.tap));
+        pos += sizeof(msg->payload.card_tap.tap);
+        break;
     default:
         break;
     }
     uint32_t len = pos;
 
     #ifdef DEBUG
-    printData((const char*)data, len);
+    printEncodedData((const char*)data, len);
     #endif
 
     return OK;
 }
 
-static TranscoderRet decode(uint32_t DeviceId, MsgId msgId, const char* args, char* data)
+static TranscoderRet decode(Msg* msg, const char* data, size_t len)
 {
-    uint32_t startpos = (uint32_t)data;
-
     uint32_t pos = 0;
+
     uint8_t opener;
-
-    if(DeviceId == SERVER_DEVICE_ID)
-    {
-        opener = OPENER_MSG_FROM_SERVER;
-    } else
-    {
-        opener = OPENER_MSG_FROM_CLIENT;
-    }
-
-    memcpy(data + pos, &opener, sizeof(opener));
+    memcpy(&opener, data + pos, sizeof(opener));
     pos += sizeof(opener);
+    // Or skip opener: pos++;
 
-    memcpy(data + pos, &DeviceId, sizeof(DeviceId));
-    pos += sizeof(DeviceId);
+    memcpy(&msg->device_id, data + pos, sizeof(msg->device_id));
+    pos += sizeof(msg->device_id);
 
+    memcpy(&msg->id, data + pos, sizeof(msg->id));
+    pos += sizeof(msg->id);
 
-
-    switch (msgId)
-    {
-    case PING:
-            
-        break;
     
-    default:
-        break;
+
+    // memcpy(data + pos, &opener, sizeof(opener));
+    // pos += sizeof(opener);
+
+    // memcpy(data + pos, &DeviceId, sizeof(DeviceId));
+    // pos += sizeof(DeviceId);
+
+
+
+    // switch (msgId)
+    // {
+    // case PING:
+            
+    //     break;
+    
+    // default:
+    //     break;
+    // }
+    len = pos;
+    if(len > 44)
+    {
+        return  NOT_OK;
     }
-    uint32_t len = pos;
 
     #ifdef DEBUG
-    printData((const char*)data, len);
+    
     #endif
 
     return OK;

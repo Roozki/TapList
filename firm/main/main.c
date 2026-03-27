@@ -108,11 +108,13 @@ void app_main(void)
         // }
 
         
-        char args[MAX_ARGS];
+        // char args[MAX_ARGS];
         char buffer[MAX_POST_REQUEST_BODY_SIZE];
         uint32_t device_id = 0xDD0000AA;
-        MsgId msgid = PING;
-        encode(device_id, msgid, args, buffer);
+        Msg msg;
+        msg.device_id = device_id;
+        msg.id = MSGID_PING;
+        encode(&msg, buffer);
         vTaskDelay(100);
 
 
