@@ -8,7 +8,8 @@
       "includePath": [
 
         "/usr/include/**",
-        "/home/rowan/TapList/frontend/**"
+        "/home/rowan/TapList/frontend/**",
+        "/home/rowan/TapList/common_lib/**"
       ],
       "name": "ros2",
       "compileCommands": "${workspaceFolder}/build/compile_commands.json",

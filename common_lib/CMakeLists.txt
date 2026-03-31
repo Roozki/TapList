@@ -1,5 +1,9 @@
 # common_lib/CMakeLists.txt
 
+set(CMAKE_CXX_STANDARD 17) # cpp 2017 standard
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(ESP_PLATFORM)
     # ── ESP-IDF build ──────────────────────────────────────────────
     idf_component_register(

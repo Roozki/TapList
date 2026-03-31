@@ -17,21 +17,6 @@ int main() {
     // Serve files from current directory
     server.set_mount_point("/", ".");
 
-    // server.Get("/value", [&](const httplib::Request&, httplib::Response& res) {
-        
-    //     std::lock_guard<std::mutex> lock(value_mutex);
-    
-    //     std::string json =
-    //         "{\"value\": " + std::to_string(shared_value) + "}";
-    
-    //     res.set_content(json, "application/json");
-    // });
-    Item test_item;
-    test_item.card_uid = 99;
-    test_item.name = "MeowMeow";
-    test_item.status = ItemStatus::unknown;
-    app.admin_user.item_map.emplace("MeowMeow", test_item);
-
     // API endpoint returning JSON
     server.Get("/items", [&](const httplib::Request&, httplib::Response& res) {
 
@@ -66,13 +51,19 @@ std::string json = "{\"have\":[" + have_json + "],\"need\":[" + need_json + "]}"
         //     return;
         // }
 
-        uint32_t new_value = 0;
-        memcpy(&new_value, &req.body[0], sizeof(new_value));
-
+        Msg incoming_msg; 
+        TranscoderRet ret = decode(&incoming_msg, req.body.c_str());
+        if(ret != OK)
+        {
+            std::cout << "Failure to parse transcoder return" << std::endl;
+        } else {
+            std::cout << "Transcoder Success" << std::endl;
+            std::cout << "DEVICE ID:" << incoming_msg.device_id << std::endl;
+            std::cout << "MESSAGE ID:" << incoming_msg.id << std::endl;
+        }
 
         {
             std::lock_guard<std::mutex> lock(value_mutex);
-            shared_value = new_value;
         }
     std::cout << "POST /update hit\n";
     std::cout << "req.body = [" << req.body << "]\n";
