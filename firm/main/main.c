@@ -55,6 +55,18 @@ rc522_t reader_1 = {
 #define SERVER_SEND_PERIOD_TICKS 100 
 
 
+// Send a ping message from this device
+void send_ping(void)
+{
+    char buffer[MAX_POST_REQUEST_BODY_SIZE];
+    Msg msg;
+    msg.device_id = DEVICE_ID;
+    msg.id = MSGID_PING;
+    msg.payload.ping.reserved = 0xDD;
+    encode(&msg, buffer);
+    send_raw_post_request(buffer, sizeof(buffer));
+}
+
 
 void app_main(void)
 {
@@ -118,13 +130,7 @@ void app_main(void)
         {
             last_server_send_tick = xTaskGetTickCount();
 
-            char buffer[MAX_POST_REQUEST_BODY_SIZE];
-            Msg msg;
-            msg.device_id = DEVICE_ID;
-            msg.id = MSGID_PING;
-            msg.payload.ping.reserved = 0xDD;
-            encode(&msg, buffer);
-            send_raw_post_request(buffer, sizeof(buffer));
+            send_ping();
         }
 
 
